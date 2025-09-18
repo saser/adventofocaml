@@ -12,6 +12,8 @@ doc: "https://github.com/saser/adventofocaml"
 bug-reports: "https://github.com/saser/adventofocaml/issues"
 depends: [
   "dune" {>= "3.20"}
+  "base"
+  "ppx_expect"
   "ocaml"
   "odoc" {with-doc}
 ]
