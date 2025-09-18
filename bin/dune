@@ -1,4 +1,4 @@
 (executable
  (public_name adventofocaml)
- (name main)
- (libraries adventofocaml))
+ (name benchmark)
+ (libraries adventofocaml core_bench core_unix.command_unix))

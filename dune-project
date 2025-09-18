@@ -21,7 +21,7 @@
  (name adventofocaml)
  (synopsis "Advent of Code solutions in OCaml")
  (description "A set of Advent of Code solutions, created as a way to learn OCaml and some of its tooling.")
- (depends base ppx_expect ocaml)
+ (depends base core_bench core_unix ppx_expect ocaml)
  (tags
   (adventofcode)))
 

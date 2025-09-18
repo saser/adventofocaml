@@ -13,6 +13,8 @@ bug-reports: "https://github.com/saser/adventofocaml/issues"
 depends: [
   "dune" {>= "3.20"}
   "base"
+  "core_bench"
+  "core_unix"
   "ppx_expect"
   "ocaml"
   "odoc" {with-doc}
