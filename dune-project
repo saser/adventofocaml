@@ -5,22 +5,22 @@
 (generate_opam_files true)
 
 (source
- (github username/reponame))
+ (github saser/adventofocaml))
 
-(authors "Author Name <author@example.com>")
+(authors "Christian Persson <582273+saser@users.noreply.github.com>")
 
-(maintainers "Maintainer Name <maintainer@example.com>")
+(maintainers "Christian Persson <582273+saser@users.noreply.github.com>")
 
-(license LICENSE)
+(license LICENSE) ; TODO: decide on a license.
 
-(documentation https://url/to/documentation)
+(documentation https://github.com/saser/adventofocaml)
 
 (package
  (name adventofocaml)
- (synopsis "A short synopsis")
- (description "A longer description")
+ (synopsis "Advent of Code solutions in OCaml")
+ (description "A set of Advent of Code solutions, created as a way to learn OCaml and some of its tooling.")
  (depends ocaml)
  (tags
-  ("add topics" "to describe" your project)))
+  (adventofcode)))
 
 ; See the complete stanza docs at https://dune.readthedocs.io/en/stable/reference/dune-project/index.html
