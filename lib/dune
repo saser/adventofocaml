@@ -1,2 +1,5 @@
 (library
- (name adventofocaml))
+ (name adventofocaml)
+ (inline_tests)
+ (preprocess
+  (pps ppx_expect)))
