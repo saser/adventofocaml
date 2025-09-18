@@ -15,6 +15,8 @@
 
 (documentation https://github.com/saser/adventofocaml)
 
+(implicit_transitive_deps false)
+
 (package
  (name adventofocaml)
  (synopsis "Advent of Code solutions in OCaml")
