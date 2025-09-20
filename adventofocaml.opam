@@ -16,7 +16,9 @@ depends: [
   "core_bench"
   "core_unix"
   "ppx_expect"
+  "ppx_let"
   "ocaml"
+  "stdio"
   "odoc" {with-doc}
 ]
 build: [
