@@ -4,3 +4,11 @@
  (libraries base stdio)
  (preprocess
   (pps ppx_expect ppx_let)))
+
+(rule
+ (with-stdout-to
+  inputs.ml
+  (progn
+   (echo "let year2024_day01 = Base.String.strip {|")
+   (cat inputs/year2024_day01)
+   (echo "|}"))))
