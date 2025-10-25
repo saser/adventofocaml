@@ -15,10 +15,11 @@ depends: [
   "base"
   "core_bench"
   "core_unix"
+  "ocaml"
   "ppx_jane"
   "ppx_sexp_conv"
-  "ocaml"
   "stdio"
+  "textutils"
   "odoc" {with-doc}
 ]
 build: [
