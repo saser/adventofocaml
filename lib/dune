@@ -1,6 +1,6 @@
 (library
  (name adventofocaml)
- (modules year2024_day01 inputs)
+ (modules year2024_day01 year2024_day07 inputs)
  (inline_tests)
  (libraries base stdio)
  (preprocess
