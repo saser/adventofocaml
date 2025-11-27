@@ -11,7 +11,9 @@
 
 (maintainers "Christian Persson <582273+saser@users.noreply.github.com>")
 
-(license LICENSE) ; TODO: decide on a license.
+(license LICENSE)
+
+; TODO: decide on a license.
 
 (documentation https://github.com/saser/adventofocaml)
 
@@ -20,9 +22,9 @@
 (package
  (name adventofocaml)
  (synopsis "Advent of Code solutions in OCaml")
- (description "A set of Advent of Code solutions, created as a way to learn OCaml and some of its tooling.")
- (depends base core_bench core_unix ppx_expect ppx_let ocaml stdio)
- (tags
-  (adventofcode)))
+ (description
+  "A set of Advent of Code solutions, created as a way to learn OCaml and some of its tooling.")
+ (depends base core_bench core_unix ppx_jane ocaml stdio)
+ (tags (adventofcode)))
 
 ; See the complete stanza docs at https://dune.readthedocs.io/en/stable/reference/dune-project/index.html
