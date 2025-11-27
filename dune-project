@@ -24,7 +24,7 @@
  (synopsis "Advent of Code solutions in OCaml")
  (description
   "A set of Advent of Code solutions, created as a way to learn OCaml and some of its tooling.")
- (depends base core_bench core_unix ppx_jane ocaml stdio)
+ (depends base core_bench core_unix ppx_jane ppx_sexp_conv ocaml stdio)
  (tags (adventofcode)))
 
 ; See the complete stanza docs at https://dune.readthedocs.io/en/stable/reference/dune-project/index.html

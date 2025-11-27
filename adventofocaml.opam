@@ -16,6 +16,7 @@ depends: [
   "core_bench"
   "core_unix"
   "ppx_jane"
+  "ppx_sexp_conv"
   "ocaml"
   "stdio"
   "odoc" {with-doc}
