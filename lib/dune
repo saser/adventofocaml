@@ -2,7 +2,7 @@
  (name adventofocaml)
  (modules year2024_day01 year2024_day05 year2024_day07 inputs playground)
  (inline_tests)
- (libraries base stdio)
+ (libraries adventofocaml.base_extensions base stdio)
  (preprocess
   (pps ppx_compare ppx_hash ppx_expect ppx_let ppx_sexp_conv)))
 

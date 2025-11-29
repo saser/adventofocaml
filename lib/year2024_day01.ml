@@ -1,12 +1,9 @@
 open Base
+open Base_extensions
 open Stdio
 
 let parse input =
-  let numbers =
-    String.split_lines input
-    |> List.concat_map ~f:(String.split ~on:' ')
-    |> List.filter_map ~f:Int.of_string_opt
-  in
+  let numbers = Stringx.fields input |> List.map ~f:Int.of_string in
   let rec loop (left, right) l =
     match l with
     | [] -> Ok (left, right)
@@ -36,18 +33,11 @@ let part1 input =
 let part2 input =
   let open Or_error.Let_syntax in
   let%bind left, right = parse input in
-  let freq =
-    List.fold right ~init:[] ~f:(fun alist n ->
-      let k = Option.value (List.Assoc.find alist ~equal:Int.equal n) ~default:0 in
-      List.Assoc.add alist ~equal:Int.equal n (k + 1))
-  in
-  let scores =
-    List.map left ~f:(fun n ->
-      let k = Option.value (List.Assoc.find freq ~equal:Int.equal n) ~default:0 in
-      n * k)
-  in
-  let total_score = List.sum (module Int) scores ~f:Fn.id in
-  Ok total_score
+  let freq = Hashtbl.create (module Int) in
+  let inc = Hashtbl.update freq ~f:(fun n -> 1 + Option.value n ~default:0) in
+  List.iter right ~f:inc;
+  let score n = n * (Hashtbl.find freq n |> Option.value ~default:0) in
+  Ok (List.sum (module Int) left ~f:score)
 ;;
 
 let example_input =
