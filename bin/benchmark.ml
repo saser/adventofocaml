@@ -12,9 +12,5 @@ let () =
            ignore @@ Year2024_day02.part1 Inputs.year2024_day02)
        ; Bench.Test.create ~name:"year2024_day02_part2" (fun () ->
            ignore @@ Year2024_day02.part2 Inputs.year2024_day02)
-       ; Bench.Test.create ~name:"year2024_day02_part1_arr" (fun () ->
-           ignore @@ Year2024_day02.part1_arr Inputs.year2024_day02)
-       ; Bench.Test.create ~name:"year2024_day02_part2_arr" (fun () ->
-           ignore @@ Year2024_day02.part2_arr Inputs.year2024_day02)
        ])
 ;;
