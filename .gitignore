@@ -1,1 +1,3 @@
 _build/
+lib/inputs/*
+!lib/inputs/.keep
