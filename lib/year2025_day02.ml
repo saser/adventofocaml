@@ -33,11 +33,7 @@ let parse_range s =
 (** [is_invalid x ~n] determines whether [x] consists of [n] repeated groups of digits. *)
 let is_invalid x ~n =
   let dx = count_digits x in
-  if dx % n <> 0
-  then false
-  else (
-    let k = dx / n in
-    repeat_digits (take_digits x ~n:k) ~n = x)
+  if dx % n <> 0 then false else repeat_digits (take_digits x ~n:(dx / n)) ~n = x
 ;;
 
 (** [invalid_ids ~min ~max ~nmin ~nmax] returns the set of invalid IDs between
