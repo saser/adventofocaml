@@ -44,14 +44,11 @@ let is_invalid x ~n =
 [min] and [max] (inclusive) formed by dividing into at least [nmin] and at most
 [nmax] groups. The returned list may contain duplicates. *)
 let invalid_ids ~min ~max ~nmin ~nmax =
-  let x =
-    List.Cartesian_product.map2
-      (List.range ~start:`inclusive ~stop:`inclusive min max)
-      (List.range ~start:`inclusive ~stop:`inclusive nmin nmax)
-      ~f:(fun x n -> Option.some_if (is_invalid x ~n) x)
-    |> List.filter_map ~f:Fn.id
-  in
-  x
+  List.Cartesian_product.map2
+    (List.range ~start:`inclusive ~stop:`inclusive min max)
+    (List.range ~start:`inclusive ~stop:`inclusive nmin nmax)
+    ~f:(fun x n -> Option.some_if (is_invalid x ~n) x)
+  |> List.filter_map ~f:Fn.id
 ;;
 
 let part1 input =
