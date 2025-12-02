@@ -14,12 +14,11 @@ let take_digits x ~n = x / (10 ** (count_digits x - n))
 [x] [n] times. *)
 let repeat_digits x ~n =
   let d = 10 ** count_digits x in
-  let rec loop acc ~n =
-    match n with
-    | 0 -> acc
-    | n -> loop ((acc * d) + x) ~n:(n - 1)
-  in
-  loop 0 ~n
+  let acc = ref 0 in
+  for _ = 0 to n - 1 do
+    acc := (!acc * d) + x
+  done;
+  !acc
 ;;
 
 (** [parse_range s] parses [s] as a string of the form ["x-y"] and returns [x,
