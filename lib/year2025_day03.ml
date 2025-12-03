@@ -1,4 +1,5 @@
 open Base
+open Base_extensions
 open Stdio
 
 let parse line =
@@ -6,15 +7,15 @@ let parse line =
 ;;
 
 let max_joltage digits ~k =
-  let digits' = Array.append [| 0 |] digits in
-  let n = Array.length digits' in
-  let best = Array.make_matrix ~dimx:(k + 1) ~dimy:n 0 in
-  for x = 1 to k do
-    for y = x to n - 1 do
-      best.(x).(y) <- Int.max best.(x).(y - 1) ((best.(x - 1).(y - 1) * 10) + digits'.(y))
-    done
+  let digits = ref digits in
+  let joltage = ref 0 in
+  for k' = k downto 1 do
+    let digits' = Array.subo !digits ~len:(Array.length !digits - k' + 1) in
+    let i = Arrayx.max_idx digits' ~compare:Int.compare |> Option.value_exn in
+    joltage := (!joltage * 10) + digits'.(i);
+    digits := Array.subo !digits ~pos:(i + 1)
   done;
-  best.(k).(n - 1)
+  !joltage
 ;;
 
 let solve input part =

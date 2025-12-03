@@ -3,5 +3,5 @@
  (public_name adventofocaml.base_extensions)
  (inline_tests)
  (preprocess
-  (pps ppx_expect))
- (libraries base stdio))
+  (pps ppx_expect ppx_sexp_value))
+ (libraries base stdio textutils.ascii_table))
