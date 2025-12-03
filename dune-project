@@ -31,6 +31,7 @@
   ocaml
   ppx_jane
   ppx_sexp_conv
+  re
   stdio
   textutils)
  (tags (adventofcode)))

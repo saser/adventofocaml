@@ -1,4 +1,18 @@
 (executable
  (public_name adventofocaml)
  (name benchmark)
+ (modules benchmark)
  (libraries adventofocaml core_bench core_unix.command_unix))
+
+(executable
+ (name genbenchmark)
+ (modules genbenchmark)
+ (libraries base core_unix.sys_unix re stdio))
+
+(rule
+ (deps
+  (source_tree ../lib))
+ (action
+  (with-stdout-to
+   benchmark.ml
+   (run ./genbenchmark.exe))))
