@@ -9,6 +9,17 @@ let parse line =
 let max_joltage digits ~k =
   let digits = ref digits in
   let joltage = ref 0 in
+  (* Greedy solution: pick the *first* maximum digit that leaves enough room
+  for the rest of the number, and repeat that until all digits have been found.
+  This works because it's always better to pick a higher digit than a lower one:
+  e.g. any k-digit number that begins with a 8 is always going to be better than
+  any k-digit number that begins with 7, 6, etc. By leaving at least (k-1)
+  digits at the end, we ensure we can create a k-digit number.
+  
+  It's important to pick the first maximum digit in each iteration so that there
+  are as many candidates as possible for the next iteration. E.g. if digits =
+  [9, 3, 9, 1] and we want to create a 2-digit number, we need to pick the first
+  9 because it means we can pick a second 9. *)
   for k' = k downto 1 do
     let digits' = Array.subo !digits ~len:(Array.length !digits - k' + 1) in
     let i = Arrayx.max_idx digits' ~compare:Int.compare |> Option.value_exn in
