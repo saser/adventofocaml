@@ -5,6 +5,11 @@
  (libraries adventofocaml core_bench core_unix.command_unix))
 
 (executable
+ (name bench)
+ (modules bench)
+ (libraries adventofocaml core_bench core_unix.command_unix))
+
+(executable
  (name genbenchmark)
  (modules genbenchmark)
  (libraries base core_unix.sys_unix re stdio))
