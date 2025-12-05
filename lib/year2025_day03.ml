@@ -7,7 +7,8 @@ let parse line =
 ;;
 
 let max_joltage digits ~k =
-  let digits = ref digits in
+  (* let digits = ref digits in *)
+  let pos = ref 0 in
   let joltage = ref 0 in
   (* Greedy solution: pick the *first* maximum digit that leaves enough room
   for the rest of the number, and repeat that until all digits have been found.
@@ -21,10 +22,16 @@ let max_joltage digits ~k =
   [9, 3, 9, 1] and we want to create a 2-digit number, we need to pick the first
   9 because it means we can pick a second 9. *)
   for k' = k downto 1 do
-    let digits' = Array.subo !digits ~len:(Array.length !digits - k' + 1) in
-    let i = Arrayx.max_idx digits' ~compare:Int.compare |> Option.value_exn in
-    joltage := (!joltage * 10) + digits'.(i);
-    digits := Array.subo !digits ~pos:(i + 1)
+    let i =
+      Arrayx.max_idx
+        digits
+        ~pos:!pos
+        ~len:(Array.length digits - k' + 1 - !pos)
+        ~compare:Int.compare
+      |> Option.value_exn
+    in
+    joltage := (!joltage * 10) + digits.(i);
+    pos := i + 1
   done;
   !joltage
 ;;

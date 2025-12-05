@@ -1,15 +1,19 @@
 open Base
 
-let max_idx t ~compare =
-  let max = ref None in
-  Array.iteri t ~f:(fun i _ ->
-    match !max with
-    | None -> max := Some i
-    | Some j -> if compare t.(i) t.(j) > 0 then max := Some i);
-  !max
+let max_idx ?(pos = 0) ?len t ~compare =
+  let loop t ~pos ~len ~compare =
+    let max = ref None in
+    for i = pos to pos + len - 1 do
+      match !max with
+      | None -> max := Some i
+      | Some j -> if compare t.(i) t.(j) > 0 then max := Some i
+    done;
+    !max
+  in
+  loop t ~pos ~len:(Option.value len ~default:(Array.length t)) ~compare
 ;;
 
-let%expect_test "max_idx" =
+let%expect_test "max_idx with defaults" =
   let examples =
     [ [||]
     ; [| 1 |]
@@ -24,7 +28,8 @@ let%expect_test "max_idx" =
        [ Sexp.to_string_hum [%sexp (t : int array)]
        ; Optionx.to_string_hum Int.to_string (max_idx t ~compare:Int.compare)
        ]));
-  [%expect {|
+  [%expect
+    {|
     ┌──────────────────────────┬────────────────────────────────┐
     │                        t │ max_idx t ~compare:Int.compare │
     ├──────────────────────────┼────────────────────────────────┤
@@ -34,5 +39,8 @@ let%expect_test "max_idx" =
     │  (9 9 9 9 9 9 9 9 9 9 9) │                         Some 0 │
     │ (9 9 9 9 9 9 9 9 9 9 10) │                        Some 10 │
     └──────────────────────────┴────────────────────────────────┘
-    |}]
+    |}];
+  let t = [| 1; 2; 3; 4; 5; 6; 7 |] in
+  let args : (pos:int * len:int) list = [] in
+  printf "lol\n"
 ;;
