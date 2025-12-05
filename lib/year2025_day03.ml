@@ -7,7 +7,8 @@ let parse line =
 ;;
 
 let max_joltage digits ~k =
-  let digits = ref digits in
+  (* let digits = ref digits in *)
+  let pos = ref 0 in
   let joltage = ref 0 in
   (* Greedy solution: pick the *first* maximum digit that leaves enough room
   for the rest of the number, and repeat that until all digits have been found.
@@ -21,10 +22,16 @@ let max_joltage digits ~k =
   [9, 3, 9, 1] and we want to create a 2-digit number, we need to pick the first
   9 because it means we can pick a second 9. *)
   for k' = k downto 1 do
-    let digits' = Array.subo !digits ~len:(Array.length !digits - k' + 1) in
-    let i = Arrayx.max_idx digits' ~compare:Int.compare |> Option.value_exn in
-    joltage := (!joltage * 10) + digits'.(i);
-    digits := Array.subo !digits ~pos:(i + 1)
+    let i =
+      Arrayx.max_idx
+        digits
+        ~pos:!pos
+        ~len:(Array.length digits - k' + 1 - !pos)
+        ~compare:Int.compare
+      |> Option.value_exn
+    in
+    joltage := (!joltage * 10) + digits.(i);
+    pos := i + 1
   done;
   !joltage
 ;;
@@ -87,8 +94,7 @@ let%expect_test "max_joltage" =
          ]))
   in
   test example_input;
-  [%expect
-    {|
+  [%expect {|
     ┌─────────────────┬─────────────────────────────────┬──────────────────┬───────────────────┐
     │            line │                          digits │ max_joltage ~k:2 │ max_joltage ~k:12 │
     ├─────────────────┼─────────────────────────────────┼──────────────────┼───────────────────┤
@@ -106,14 +112,12 @@ let%expect_test "solution" =
     printf "part2: %d\n" (part2 input)
   in
   test example_input;
-  [%expect
-    {|
+  [%expect {|
     part1: 357
     part2: 3121910778619
     |}];
   test Inputs.year2025_day03;
-  [%expect
-    {|
+  [%expect {|
     part1: 17766
     part2: 176582889354075
     |}]
