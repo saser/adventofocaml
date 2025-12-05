@@ -1,12 +1,16 @@
 open Base
 
-let max_idx t ~compare =
-  let max = ref None in
-  Array.iteri t ~f:(fun i _ ->
-    match !max with
-    | None -> max := Some i
-    | Some j -> if compare t.(i) t.(j) > 0 then max := Some i);
-  !max
+let max_idx ?(pos = 0) ?len t ~compare =
+  let loop t ~pos ~len ~compare =
+    let max = ref None in
+    for i = pos to pos + len - 1 do
+      match !max with
+      | None -> max := Some i
+      | Some j -> if compare t.(i) t.(j) > 0 then max := Some i
+    done;
+    !max
+  in
+  loop t ~pos ~len:(Option.value len ~default:(Array.length t)) ~compare
 ;;
 
 let%expect_test "max_idx" =
