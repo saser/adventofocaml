@@ -1,6 +1,40 @@
 open Base
 open Stdio
 
+module UnionFind = struct
+  type t =
+    { parent : int array
+    ; size : int array
+    }
+
+  let create n =
+    let parent = Array.init n ~f:Fn.id in
+    let size = Array.create ~len:n 1 in
+    { parent; size }
+  ;;
+
+  let find t x =
+    let x = ref x in
+    while t.parent.(!x) <> !x do
+      t.parent.(!x) <- t.parent.(t.parent.(!x));
+      x := t.parent.(!x)
+    done;
+    !x
+  ;;
+
+  let union t x y =
+    let x = find t x in
+    let y = find t y in
+    if x = y
+    then false
+    else (
+      let x, y = if t.size.(x) < t.size.(y) then y, x else x, y in
+      t.parent.(y) <- x;
+      t.size.(x) <- t.size.(x) + t.size.(y);
+      true)
+  ;;
+end
+
 module Pos3 = struct
   type t =
     { x : float
@@ -25,57 +59,49 @@ module Pos3 = struct
   ;;
 end
 
-let part1 input : int =
+let solve input part =
   let junction_boxes =
     String.split_lines input |> List.map ~f:Pos3.of_string |> List.to_array
   in
-  let circuits = Hashtbl.create (module Pos3) ~size:(Array.length junction_boxes) in
-  Array.iter junction_boxes ~f:(fun box ->
-    Hashtbl.set circuits ~key:box ~data:(Hash_set.of_list (module Pos3) [ box ]));
-  let distances =
+  let edges =
     Sequence.range 0 (Array.length junction_boxes)
     |> Sequence.concat_map ~f:(fun i ->
       Sequence.range (i + 1) (Array.length junction_boxes)
-      |> Sequence.map ~f:(fun j -> junction_boxes.(i), junction_boxes.(j)))
+      |> Sequence.map ~f:(fun j ->
+        let bi = junction_boxes.(i) in
+        let bj = junction_boxes.(j) in
+        Pos3.distance_sq bi bj, i, j))
     |> Sequence.to_list
-    |> List.sort ~compare:(fun (a1, b1) (a2, b2) ->
-      Float.compare (Pos3.distance_sq a1 b1) (Pos3.distance_sq a2 b2))
+    |> List.sort ~compare:(fun (d1, _, _) (d2, _, _) -> Float.compare d1 d2)
   in
-  List.iter (List.take distances 1000) ~f:(fun (a, b) ->
-    (* printf "%s to %s\n" (Pos3.to_string a) (Pos3.to_string b); *)
-    let circuit =
-      Hash_set.union (Hashtbl.find_exn circuits a) (Hashtbl.find_exn circuits b)
-    in
-    (* printf
-      "union: %s (size: %d)\n"
-      (Sexp.to_string_hum
-         (Hash_set.to_list circuit
-          |> List.sort ~compare:Pos3.compare
-          |> List.map ~f:Pos3.to_string
-          |> List.sexp_of_t String.sexp_of_t))
-      (Hash_set.length circuit); *)
-    Hash_set.iter circuit ~f:(fun box -> Hashtbl.set circuits ~key:box ~data:circuit));
-  let top3 =
-    Hashtbl.to_alist circuits
-    |> List.map ~f:snd
-    |> List.sort ~compare:(fun a b ->
-      -1 * Int.compare (Hash_set.length a) (Hash_set.length b))
-    |> List.remove_consecutive_duplicates ~equal:phys_equal
-    |> fun l -> List.take l 3
-  in
-  (* List.iter top3 ~f:(fun circuit ->
-    printf
-      "union: %s (size: %d)\n"
-      (Sexp.to_string_hum
-         (Hash_set.to_list circuit
-          |> List.sort ~compare:Pos3.compare
-          |> List.map ~f:Pos3.to_string
-          |> List.sexp_of_t String.sexp_of_t))
-      (Hash_set.length circuit)); *)
-  List.fold (List.map top3 ~f:Hash_set.length) ~init:1 ~f:Int.( * )
+  let uf = UnionFind.create (Array.length junction_boxes) in
+  match part with
+  | `Part1 ->
+    List.iter (List.take edges 1000) ~f:(fun (_, i, j) ->
+      UnionFind.union uf i j |> ignore);
+    Array.sort uf.size ~compare:Int.compare;
+    Array.rev_inplace uf.size;
+    let answer = ref 1 in
+    for i = 0 to 2 do
+      answer := !answer * uf.size.(i)
+    done;
+    !answer
+  | `Part2 ->
+    List.fold_until
+      edges
+      ~init:()
+      ~f:(fun () (_, i, j) ->
+        if UnionFind.union uf i j
+        then
+          if uf.size.(UnionFind.find uf i) = Array.length junction_boxes
+          then Stop (Float.to_int junction_boxes.(i).x * Float.to_int junction_boxes.(j).x)
+          else Continue ()
+        else Continue ())
+      ~finish:(fun () -> -2)
 ;;
 
-let part2 _input : int = -1
+let part1 input = solve input `Part1
+let part2 input = solve input `Part2
 
 let example_input =
   String.strip
@@ -111,13 +137,12 @@ let%expect_test "solution" =
   test example_input;
   [%expect
     {|
-    part1: 20
-    part2: -1
+    part1: 500
+    part2: 25272
     |}];
   test Inputs.year2025_day08;
-  [%expect
-    {|
+  [%expect {|
     part1: 79560
-    part2: -1
+    part2: 31182420
     |}]
 ;;
