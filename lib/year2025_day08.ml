@@ -87,17 +87,11 @@ let solve input part =
     done;
     !answer
   | `Part2 ->
-    List.fold_until
-      edges
-      ~init:()
-      ~f:(fun () (_, i, j) ->
-        if UnionFind.union uf i j
-        then
-          if uf.size.(UnionFind.find uf i) = Array.length junction_boxes
-          then Stop (Float.to_int junction_boxes.(i).x * Float.to_int junction_boxes.(j).x)
-          else Continue ()
-        else Continue ())
-      ~finish:(fun () -> -2)
+    List.fold edges ~init:None ~f:(fun last_joined (_, i, j) ->
+      if UnionFind.union uf i j then Some (i, j) else last_joined)
+    |> Option.map ~f:(fun (i, j) ->
+      Float.to_int junction_boxes.(i).x * Float.to_int junction_boxes.(j).x)
+    |> Option.value ~default:0
 ;;
 
 let part1 input = solve input `Part1
@@ -141,7 +135,8 @@ let%expect_test "solution" =
     part2: 25272
     |}];
   test Inputs.year2025_day08;
-  [%expect {|
+  [%expect
+    {|
     part1: 79560
     part2: 31182420
     |}]
