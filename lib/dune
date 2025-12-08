@@ -15,7 +15,12 @@
   inputs
   playground)
  (inline_tests)
- (libraries adventofocaml.base_extensions base stdio textutils.ascii_table)
+ (libraries
+  adventofocaml.base_extensions
+  base
+  core
+  stdio
+  textutils.ascii_table)
  (preprocess
   (pps ppx_compare ppx_hash ppx_expect ppx_let ppx_sexp_conv ppx_sexp_value)))
 
