@@ -135,7 +135,7 @@ let%expect_test "solution" =
   test Inputs.year2025_day06;
   [%expect
     {|
-    part1: 6172481852142
-    part2: 10188206723429
+    part1: 644950862907
+    part2: 1238820497131
     |}]
 ;;
