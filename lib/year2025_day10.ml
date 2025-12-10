@@ -59,10 +59,11 @@ end
 let fewest_presses target buttons =
   let start = Lights.start target in
   let seen = Hashtbl.of_alist_exn (module Lights) [ start, 0 ] in
-  let q = Queue.of_list [ start, 0 ] in
+  let q = Queue.of_list [ start ] in
   let answer = ref None in
   while (not (Queue.is_empty q)) && Option.is_none !answer do
-    let lights, count = Queue.dequeue_exn q in
+    let lights = Queue.dequeue_exn q in
+    let count = Hashtbl.find_exn seen lights in
     (* printf "dequeued %s, %d\n" (Lights.to_string lights) count; *)
     if Lights.equal lights target
     then
@@ -84,7 +85,7 @@ let fewest_presses target buttons =
             (Lights.to_string lights')
             count'; *)
           Hashtbl.add_exn seen ~key:lights' ~data:count';
-          Queue.enqueue q (lights', count'))
+          Queue.enqueue q lights')
         else
           ( (* printf "have already seen %s; skipping it\n" (Lights.to_string lights') *) )))
   done;
