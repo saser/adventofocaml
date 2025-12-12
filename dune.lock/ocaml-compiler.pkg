@@ -108,6 +108,8 @@
     --disable-warn-error)
    (run %{make} -j%{jobs}))))
 
+(depends ocaml-option-fp)
+
 (source
  (fetch
   (url

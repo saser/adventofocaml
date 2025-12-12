@@ -28,7 +28,7 @@
   base
   core_bench
   core_unix
-  ocaml
+  ocaml-option-fp
   ppx_jane
   ppx_sexp_conv
   re
