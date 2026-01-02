@@ -53,6 +53,7 @@ module Lights = struct
   ;;
 
   let apply t button = { t with n = Int.(t.n lxor button) }
+  let apply_all t buttons = Sequence.fold buttons ~init:t ~f:apply
   let start t = { t with n = 0 }
 end
 
@@ -88,39 +89,32 @@ end = struct
   ;;
 end
 
+let rec choose_bits n k =
+  if k = 0
+  then Sequence.return 0
+  else
+    Sequence.range (k - 1) n
+    |> Sequence.concat_map ~f:(fun n' ->
+      choose_bits n' (k - 1) |> Sequence.map ~f:(fun sub -> Int.((1 lsl n') lor sub)))
+;;
+
+let choose_at_most_bits n k =
+  Sequence.range ~stop:`inclusive 0 k |> Sequence.concat_map ~f:(choose_bits n)
+;;
+
+let select arr bits =
+  Sequence.range 0 (Array.length arr)
+  |> Sequence.filter_map ~f:(fun b ->
+    Option.some_if Int.(bits land (1 lsl b) <> 0) arr.(b))
+;;
+
 let fewest_light_presses target buttons =
-  let start = Lights.start target in
-  let seen = Hashtbl.of_alist_exn (module Lights) [ start, 0 ] in
-  let q = Queue.of_list [ start ] in
-  let answer = ref None in
-  while (not (Queue.is_empty q)) && Option.is_none !answer do
-    let lights = Queue.dequeue_exn q in
-    let count = Hashtbl.find_exn seen lights in
-    (* printf "dequeued %s, %d\n" (Lights.to_string lights) count; *)
-    if Lights.equal lights target
-    then
-      (* printf "reached target %s in %d steps!\n" (Lights.to_string target) count; *)
-      answer := Some count
-    else (
-      let count' = count + 1 in
-      List.iter buttons ~f:(fun button ->
-        let lights' = Lights.apply lights button in
-        (* printf
-          "%s --%s--> %s\n"
-          (Lights.to_string lights)
-          (Button.to_string button)
-          (Lights.to_string lights'); *)
-        if not (Hashtbl.mem seen lights')
-        then (
-          (* printf
-            "have not yet seen %s; queueing it with %d steps\n"
-            (Lights.to_string lights')
-            count'; *)
-          Hashtbl.add_exn seen ~key:lights' ~data:count';
-          Queue.enqueue q lights')
-        (* else printf "have already seen %s; skipping it\n" (Lights.to_string lights') *)))
-  done;
-  Option.value !answer ~default:(-1)
+  let buttons = Array.of_list buttons in
+  let n = Array.length buttons in
+  choose_at_most_bits n n
+  |> Sequence.find_exn ~f:(fun bits ->
+    Lights.(equal target (apply_all (start target) (select buttons bits))))
+  |> Int.popcount
 ;;
 
 let rec combinations = function
@@ -333,5 +327,124 @@ let%expect_test "Lights.apply" =
               0b1000
     apply   0b1_1110
     =       0b1_0110
+    |}]
+;;
+
+let%expect_test "choose_bits" =
+  let test n k =
+    Sequence.iter (choose_bits n k) ~f:(fun bits ->
+      print_endline (Int.Binary.to_string_hum bits))
+  in
+  test 5 0;
+  [%expect {| 0b0 |}];
+  test 5 1;
+  [%expect
+    {|
+    0b1
+    0b10
+    0b100
+    0b1000
+    0b1_0000
+    |}];
+  test 5 2;
+  [%expect
+    {|
+    0b11
+    0b101
+    0b110
+    0b1001
+    0b1010
+    0b1100
+    0b1_0001
+    0b1_0010
+    0b1_0100
+    0b1_1000
+    |}];
+  test 5 3;
+  [%expect
+    {|
+    0b111
+    0b1011
+    0b1101
+    0b1110
+    0b1_0011
+    0b1_0101
+    0b1_0110
+    0b1_1001
+    0b1_1010
+    0b1_1100
+    |}];
+  test 5 4;
+  [%expect
+    {|
+    0b1111
+    0b1_0111
+    0b1_1011
+    0b1_1101
+    0b1_1110
+    |}];
+  test 5 5;
+  [%expect {| 0b1_1111 |}]
+;;
+
+let%expect_test "choose_up_to_bits" =
+  let test n k =
+    Sequence.iter (choose_at_most_bits n k) ~f:(fun bits ->
+      print_endline (Int.Binary.to_string_hum bits))
+  in
+  test 5 3;
+  [%expect
+    {|
+    0b0
+    0b1
+    0b10
+    0b100
+    0b1000
+    0b1_0000
+    0b11
+    0b101
+    0b110
+    0b1001
+    0b1010
+    0b1100
+    0b1_0001
+    0b1_0010
+    0b1_0100
+    0b1_1000
+    0b111
+    0b1011
+    0b1101
+    0b1110
+    0b1_0011
+    0b1_0101
+    0b1_0110
+    0b1_1001
+    0b1_1010
+    0b1_1100
+    |}]
+;;
+
+let%expect_test "select" =
+  let arr = [| "Alice"; "Bob"; "Clare"; "David"; "Erica"; "Fergus" |] in
+  let examples = [ 0b0; 0b100001; 0b101010; 0b111111 ] in
+  Ascii_table.simple_list_table
+    [ "bits"; "select arr bits" ]
+    (List.map examples ~f:(fun bits ->
+       [ Int.Binary.to_string_hum bits
+       ; select arr bits
+         |> Sequence.to_array
+         |> Array.sexp_of_t String.sexp_of_t
+         |> Sexp.to_string_hum
+       ]));
+  [%expect
+    {|
+    ┌───────────┬──────────────────────────────────────┐
+    │      bits │                      select arr bits │
+    ├───────────┼──────────────────────────────────────┤
+    │       0b0 │                                   () │
+    │ 0b10_0001 │                       (Alice Fergus) │
+    │ 0b10_1010 │                   (Bob David Fergus) │
+    │ 0b11_1111 │ (Alice Bob Clare David Erica Fergus) │
+    └───────────┴──────────────────────────────────────┘
     |}]
 ;;
