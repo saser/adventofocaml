@@ -1,59 +1,59 @@
 open Base
 open Stdio
 
-module Button : sig
-  type t
-
-  val of_string : string -> t
-  val to_string : t -> string
-  val to_list : t -> int list
-end = struct
-  type t = int list
+module Button = struct
+  type t = int
 
   let of_string s =
     String.strip s ~drop:(fun c -> Char.(c = '(' || c = ')'))
     |> String.split ~on:','
-    |> List.map ~f:Int.of_string
+    |> List.fold ~init:0 ~f:(fun button n -> Int.(button lor (1 lsl of_string n)))
+  ;;
+
+  let to_list t =
+    let rec loop acc i t =
+      match t with
+      | 0 -> List.rev acc
+      | n -> loop (if n % 2 = 1 then i :: acc else acc) (i + 1) (Int.shift_right n 1)
+    in
+    loop [] 0 t
   ;;
 
   let to_string t =
-    List.map t ~f:Int.to_string |> String.concat ~sep:"," |> fun s -> "(" ^ s ^ ")"
+    to_list t
+    |> List.map ~f:Int.to_string
+    |> String.concat ~sep:","
+    |> fun s -> "(" ^ s ^ ")"
   ;;
-
-  let to_list t = t
 end
 
-module Lights : sig
-  type t
+module Lights = struct
+  type t =
+    { n : int
+    ; len : int
+    }
+  [@@deriving compare, equal, hash, sexp_of]
 
-  val of_string : string -> t
-  val to_string : t -> string
-  val apply : t -> Button.t -> t
-  val start : t -> t
-  val target : t -> t
-
-  include Equal.S with type t := t
-  include Hashable.Key with type t := t
-end = struct
-  type t = string [@@deriving compare, equal, hash, sexp_of]
-
-  let of_string s = String.strip s ~drop:(fun c -> Char.(c = '[' || c = ']'))
-  let to_string t = "[" ^ t ^ "]"
-
-  let apply t button =
-    let chars = String.to_array t in
-    List.iter (Button.to_list button) ~f:(fun n ->
-      chars.(n)
-      <- (match chars.(n) with
-          | '.' -> '#'
-          | '#' -> '.'
-          | c -> Printf.failwithf "invalid char %C" c ()));
-    String.of_array chars
+  let of_string s =
+    let s = String.strip s ~drop:(fun c -> Char.(c = '[' || c = ']')) in
+    let n =
+      String.foldi s ~init:0 ~f:(fun i lights c ->
+        let b = Char.(c = '#') |> Bool.to_int in
+        Int.(lights lor (b lsl i)))
+    in
+    { n; len = String.length s }
   ;;
 
-  let fill t c = Array.create ~len:(String.length t) c |> String.of_array
-  let start t = fill t '.'
-  let target t = fill t '#'
+  let to_string t =
+    let chars = Array.create ~len:t.len '.' in
+    for b = 0 to t.len - 1 do
+      if Int.(t.n land (1 lsl b)) <> 0 then chars.(b) <- '#'
+    done;
+    "[" ^ String.of_array chars ^ "]"
+  ;;
+
+  let apply t button = { t with n = Int.(t.n lxor button) }
+  let start t = { t with n = 0 }
 end
 
 module Joltage : sig
@@ -118,11 +118,27 @@ let fewest_light_presses target buttons =
             count'; *)
           Hashtbl.add_exn seen ~key:lights' ~data:count';
           Queue.enqueue q lights')
-        else
-          ( (* printf "have already seen %s; skipping it\n" (Lights.to_string lights') *) )))
+        (* else printf "have already seen %s; skipping it\n" (Lights.to_string lights') *)))
   done;
   Option.value !answer ~default:(-1)
 ;;
+
+let rec combinations = function
+  | [] -> [ [] ]
+  | x :: tl ->
+    let rest = combinations tl in
+    List.append rest (List.map rest ~f:(fun c -> x :: c))
+;;
+
+let odd_candidates target buttons =
+  let test combination =
+    let result = List.fold combination ~init:(Lights.start target) ~f:Lights.apply in
+    Option.some_if (Lights.equal result target) combination
+  in
+  List.filter_map (combinations buttons) ~f:test
+;;
+
+let fewest_joltage_presses2 _target _buttons = -1
 
 let fewest_joltage_presses target buttons =
   let start = Joltage.start target in
@@ -240,4 +256,82 @@ let%expect_test "solution" =
     |}];
   (* test Inputs.year2025_day10; *)
   [%expect {| |}]
+;;
+
+let%expect_test "combinations" =
+  let test xs =
+    print_endline "xs:";
+    print_s [%sexp (xs : int list)];
+    print_endline "combinations:";
+    List.iter (combinations xs) ~f:(fun c -> print_s [%sexp (c : int list)])
+  in
+  test [];
+  [%expect
+    {|
+    xs:
+    ()
+    combinations:
+    ()
+    |}];
+  test [ 1 ];
+  [%expect
+    {|
+    xs:
+    (1)
+    combinations:
+    ()
+    (1)
+    |}];
+  test [ 1; 2; 3 ];
+  [%expect
+    {|
+    xs:
+    (1 2 3)
+    combinations:
+    ()
+    (3)
+    (2)
+    (2 3)
+    (1)
+    (1 3)
+    (1 2)
+    (1 2 3)
+    |}]
+;;
+
+let%expect_test "odd_candidates" =
+  let test target buttons =
+    let target = Lights.of_string target in
+    let buttons = String.split buttons ~on:' ' |> List.map ~f:Button.of_string in
+    printf "target: %s\n" (Lights.to_string target);
+    printf "buttons: %s\n" (String.concat ~sep:" " (List.map buttons ~f:Button.to_string));
+    print_endline "odd_candidates:";
+    List.iter (odd_candidates target buttons) ~f:(fun candidate ->
+      String.concat ~sep:" " (List.map candidate ~f:Button.to_string) |> print_endline)
+  in
+  test "[##.#]" "(3) (1,3) (2) (2,3) (0,2) (0,1)";
+  [%expect
+    {|
+    target: [##.#]
+    buttons: (3) (1,3) (2) (2,3) (0,2) (0,1)
+    odd_candidates:
+    (2) (2,3) (0,1)
+    (1,3) (2) (0,2)
+    (3) (0,1)
+    (3) (1,3) (2,3) (0,2)
+    |}]
+;;
+
+let%expect_test "Lights.apply" =
+  let lights = Lights.of_string "[...#.]" in
+  let button = Button.of_string "(1,2,3,4)" in
+  printf "      %10s\n" (Int.Binary.to_string_hum lights.n);
+  printf "apply %10s\n" (Int.Binary.to_string_hum button);
+  printf "=     %10s\n" (Int.Binary.to_string_hum (Lights.apply lights button).n);
+  [%expect
+    {|
+              0b1000
+    apply   0b1_1110
+    =       0b1_0110
+    |}]
 ;;
